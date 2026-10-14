@@ -1,0 +1,152 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WaveChat 🌊</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eaf7fb;color:#16445a}
+header{background:#168aad;color:white;text-align:center;padding:22px}
+header h1{margin:0}
+main{max-width:600px;margin:22px auto;padding:14px}
+.panel{background:white;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #16445a12}
+input,button{width:100%;padding:13px;margin-top:10px;border-radius:9px;font-size:16px}
+input{border:1px solid #b8dce8}
+button{border:0;background:#168aad;color:white;cursor:pointer;font-weight:bold}
+button:hover{background:#126782}
+#chat{height:260px;overflow-y:auto;background:#f3fbfd;border-radius:10px;padding:12px;margin-top:12px}
+.message{background:#d8f3fc;padding:10px;margin:8px 0;border-radius:10px;overflow-wrap:anywhere}
+.small{font-size:13px;color:#577786}
+</style>
+</head>
+<body>
+<header>
+<h1>🌊 WaveChat</h1>
+<p>Your little corner of the internet.</p>
+</header>
+
+<main>
+<section class="panel">
+<h2>Your profile 💙</h2>
+<input id="username" placeholder="Choose a username">
+<button onclick="joinChat()">Join WaveChat</button>
+<p id="profile"></p>
+<p class="small">Demo friend codes are not connected to real accounts yet.</p>
+</section>
+
+<section class="panel">
+<h2>💬 Your chat</h2>
+<input id="friend" placeholder="Friend's username">
+<div id="chat">
+<p class="small">Join WaveChat to start your demo chat!</p>
+</div>
+<input id="message" placeholder="Write a message..." maxlength="1000">
+<button onclick="sendMessage()">Send 🌊</button>
+<p class="small">This demo saves messages only in this browser. It does not send messages to your friends yet.</p>
+</section>
+</main>
+
+<script>
+let currentUser = "";
+let friendCode = "";
+
+function joinChat() {
+  const name = document.getElementById("username").value.trim();
+  if (!name) {
+    alert("Please choose a username!");
+    return;
+  }
+
+  currentUser = name;
+  friendCode = "WAVE-" + name.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8);
+
+  document.getElementById("profile").textContent =
+    "Welcome, " + currentUser + "! Your demo friend code: " + friendCode;
+
+  showMessages();
+}
+
+function sendMessage() {
+  if (!currentUser) {
+    alert("Choose a username and join first!");
+    return;
+  }
+
+  const friend = document.getElementById("friend").value.trim();
+  const input = document.getElementById("message");
+  const content = input.value.trim();
+
+  if (!friend) {
+    alert("Enter your friend's username!");
+    return;
+  }
+  if (!content) return;
+
+  const key = "wavechat-demo-" +
+    [currentUser.toLowerCase(), friend.toLowerCase()].sort().join("-");
+
+  const messages = JSON.parse(localStorage.getItem(key) || "[]");
+  messages.push({
+    sender: currentUser,
+    content: content,
+    time: new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit"
+    })
+  });
+
+  localStorage.setItem(key, JSON.stringify(messages));
+  input.value = "";
+  showMessages();
+}
+
+function showMessages() {
+  const friend = document.getElementById("friend").value.trim();
+  const chat = document.getElementById("chat");
+
+  if (!currentUser || !friend) {
+    chat.textContent = "Enter a friend's username to view the demo chat.";
+    return;
+  }
+
+  const key = "wavechat-demo-" +
+    [currentUser.toLowerCase(), friend.toLowerCase()].sort().join("-");
+  const messages = JSON.parse(localStorage.getItem(key) || "[]");
+
+  chat.replaceChildren();
+
+  if (messages.length === 0) {
+    chat.textContent = "No messages yet. Say hello! 👋";
+    return;
+  }
+
+  messages.forEach(function(msg) {
+    const bubble = document.createElement("div");
+    bubble.className = "message";
+
+    const sender = document.createElement("strong");
+    sender.textContent = msg.sender + ": ";
+
+    const text = document.createElement("span");
+    text.textContent = msg.content;
+
+    const time = document.createElement("div");
+    time.className = "small";
+    time.textContent = msg.time;
+
+    bubble.append(sender, text, time);
+    chat.appendChild(bubble);
+  });
+
+  chat.scrollTop = chat.scrollHeight;
+}
+
+document.getElementById("friend").addEventListener("input", showMessages);
+document.getElementById("message").addEventListener("keydown", function(event) {
+  if (event.key === "Enter") sendMessage();
+});
+</script>
+</body>
+</html>
